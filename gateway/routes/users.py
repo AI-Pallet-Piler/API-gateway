@@ -35,7 +35,7 @@ async def create_user():
 
 
 @router.delete("/delete", tags=["users"])
-async def create_user(request: Request):
+async def delete_user(request: Request):
     with httpx.Client() as client:
         try:
             response = client.delete(settings.url_backend + "/delete")
