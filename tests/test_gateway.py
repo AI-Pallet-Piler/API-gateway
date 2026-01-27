@@ -17,7 +17,7 @@ class DummyResponse:
 def test_get_first_users(monkeypatch):
     users = [{"name": "Leanne Graham", "email": "Sincere@april.biz"}]
 
-    def fake_get(self, url, *args, **kwargs):
+    def fake_get():
         return DummyResponse(users)
 
     monkeypatch.setattr(httpx.Client, "get", fake_get)

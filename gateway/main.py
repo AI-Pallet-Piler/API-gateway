@@ -6,7 +6,6 @@ from gateway.middelwares import log_middelware
 from gateway.routes import users
 
 app = FastAPI(prefix="/api/v1")
-# app.add_middleware(BaseHTTPMiddleware, dispatch=log_middleware)
 
 app.add_middleware(log_middelware.Logging_middelware)
 
