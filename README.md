@@ -3,14 +3,18 @@
 A minimal FastAPI gateway demonstrating external HTTP calls, structured JSON logging and a small middleware for request/response observability.
 
 ## Tech stack
-- Python 3.8+
-- FastAPI
-- uvicorn
-- httpx
-- logging (custom JSON formatter)
-- pip for dependency management
 
-## Quick start (Windows PowerShell)
+| Technology            | Version    |
+|-----------------------|------------|
+| Python                | 3.8+      |
+| FastAPI               | Latest     |
+| Uvicorn               | Latest     |
+| HTTPX                 | Latest     |
+| Logging               | Custom JSON formatter |
+| Dependency Management  | pip        |
+
+## Quick start
+### (Windows PowerShell)
 1. Create and activate venv + dependencies:
    - `python .\create_venv.py`
    - `.\.venv\Scripts\Activate.ps1`
@@ -20,7 +24,23 @@ A minimal FastAPI gateway demonstrating external HTTP calls, structured JSON log
    - `python main.py`
 3. Example endpoints:
    - `http://localhost:8000/get_first_users`
-
+### (Linux)
+1. Create and activate venv + dependencies:
+   - `python .\create_venv.py`
+   - `source .\.venv\bin\activate`
+2. Run locally:
+   - `.\.venv\Scripts\Activate.ps1`
+   - `python -m uvicorn gateway.main:app --reload --host 0.0.0.0 --port 8000` or 
+   - `python main.py`
+3. Example endpoints:
+   - `http://localhost:8000/get_first_users`
+### (docker)
+1. Create the image of the container:
+   - `docker build -t api_gateway`
+2. Run the image:
+   - `docker run -d api_gateway`
+3. Example endpoints:
+   - `http://localhost:8000/get_first_users`
 ## Logging
 - JSON-formatted logs via `gateway/loggers/logger.py` (`JsonFormatter`).
 - Rotating file handlers write into `logs/`.
