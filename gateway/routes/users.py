@@ -115,7 +115,7 @@ async def patch_user(request: Request):
         except httpx.HTTPStatusError as e:
             logger.critical(e)
             return Response(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=e)
-@router.patch("/update", tags=["users"])
+@router.get("/get", tags=["users"])
 async def get_user(request: Request):
     with httpx.Client() as client:
         try:
