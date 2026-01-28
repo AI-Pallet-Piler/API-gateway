@@ -115,3 +115,22 @@ async def patch_user(request: Request):
         except httpx.HTTPStatusError as e:
             logger.critical(e)
             return Response(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=e)
+@router.patch("/update", tags=["users"])
+async def get_user(request: Request):
+    with httpx.Client() as client:
+        try:
+            body: bytes = await request.body()
+            response = client.request(
+                method="get",
+                content=body,
+                url=settings.url_backend,
+            )
+            if response.status_code == status.HTTP_200_OK:
+                logger.warning(response)
+                return Response(status_code=status.HTTP_200_OK, content=response.content)
+            else:
+                logger.warning(response.status_code)
+                return Response(status_code=status.HTTP_404_NOT_FOUND, content=response.content)
+        except httpx.HTTPStatusError as e:
+            logger.critical(e)
+            return Response(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content=e)
