@@ -8,6 +8,7 @@ including CRUD operations (Create, Read, Update, Delete).
 import httpx
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, Response, Request, status
+from fastapi.params import Path
 from fastapi.responses import JSONResponse
 
 from gateway import config
@@ -58,14 +59,243 @@ async def proxy_request(
     headers["X-Request-ID"] = request_id  # Propagate to backend
 
     body: bytes = await request.body()
+    full_url: str = settings.url_backend + endpoint
+    logger.debug(f"Proxy request URL: {full_url}")
     response: httpx.Response = await client.request(
         method,
-        settings.url_backend + endpoint,
+        full_url,
         content=body,
         headers=headers
     )
     return response
 
+@router.get(
+    "/{user_id}",
+    tags=["users"],
+    summary="Get user by ID",
+    description="Proxies a GET request to completely get a user by ID in the backend service."
+)
+async def replace_user_by_id(
+    request: Request,
+    user_id: str = Path(..., description="The unique identifier of the user")
+) -> Response:
+    """
+    Replace a user by their ID using PUT method (full update).
+    Args:
+        request: The incoming FastAPI Request containing user data.
+        user_id: The unique identifier of the user to replace.
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint=f"/{user_id}"
+        )
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_201_CREATED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_201_CREATED,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_202_ACCEPTED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=response.content
+            )
+        else:
+            logger.warning(response.status_code)
+            return Response(
+                status_code=response.status_code,
+                content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(e)
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+
+@router.put(
+    "/{user_id}",
+    tags=["users"],
+    summary="replace user by ID",
+    description="Proxies a put request to completely replace a user by ID in the backend service."
+)
+async def replace_user_by_id(
+    request: Request,
+    user_id: str = Path(..., description="The unique identifier of the user")
+) -> Response:
+    """
+    Replace a user by their ID using PUT method (full update).
+    Args:
+        request: The incoming FastAPI Request containing user data.
+        user_id: The unique identifier of the user to replace.
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint=f"/{user_id}"
+        )
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_201_CREATED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_201_CREATED,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_202_ACCEPTED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=response.content
+            )
+        else:
+            logger.warning(response.status_code)
+            return Response(
+                status_code=response.status_code,
+                content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(e)
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+
+@router.patch(
+    "/{user_id}",
+    tags=["users"],
+    summary="patch user by ID",
+    description="Proxies a patch request to completely get a update by ID in the backend service."
+)
+async def replace_user_by_id(
+    request: Request,
+    user_id: str = Path(..., description="The unique identifier of the user")
+) -> Response:
+    """
+    Replace a user by their ID using PUT method (full update).
+    Args:
+        request: The incoming FastAPI Request containing user data.
+        user_id: The unique identifier of the user to replace.
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint=f"/{user_id}"
+        )
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_201_CREATED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_201_CREATED,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_202_ACCEPTED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=response.content
+            )
+        else:
+            logger.warning(response.status_code)
+            return Response(
+                status_code=response.status_code,
+                content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(e)
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+
+@router.delete(
+    "/{user_id}",
+    tags=["users"],
+    summary="delete user by ID",
+    description="Proxies a delete request to completely delete a user by ID in the backend service."
+)
+async def replace_user_by_id(
+    request: Request,
+    user_id: str = Path(..., description="The unique identifier of the user")
+) -> Response:
+    """
+    Replace a user by their ID using PUT method (full update).
+    Args:
+        request: The incoming FastAPI Request containing user data.
+        user_id: The unique identifier of the user to replace.
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint=f"/{user_id}"
+        )
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_201_CREATED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_201_CREATED,
+                content=response.content
+            )
+        elif response.status_code == status.HTTP_202_ACCEPTED:
+            logger.debug(response)
+            return Response(
+                status_code=status.HTTP_202_ACCEPTED,
+                content=response.content
+            )
+        else:
+            logger.warning(response.status_code)
+            return Response(
+                status_code=response.status_code,
+                content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(e)
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
 
 @router.put(
     "/create",
@@ -123,180 +353,8 @@ async def create_user(request: Request) -> Response:
             content=str(e)
         )
 
-
-@router.put(
-    "/replace",
-    tags=["users"],
-    summary="Replace an existing user via PUT",
-    description="Proxies a PUT request to replace an existing user in the backend service."
-)
-async def replace_user(request: Request) -> Response:
-    """
-    Replace an existing user using PUT method.
-
-    Args:
-        request: The incoming FastAPI Request containing user data.
-
-    Returns:
-        Response: A FastAPI Response with the backend's response content and status code.
-
-    Raises:
-        httpx.HTTPStatusError: If the backend service returns an error.
-    """
-    try:
-        response: httpx.Response = await proxy_request(
-            request=request,
-            method="put",
-            endpoint="/replace"
-        )
-        if response.status_code == status.HTTP_200_OK:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_201_CREATED:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_201_CREATED,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_202_ACCEPTED:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_202_ACCEPTED,
-                content=response.content
-            )
-        else:
-            logger.warning(response.status_code)
-            return Response(
-                status_code=response.status_code,
-                content=response.content
-            )
-    except httpx.HTTPStatusError as e:
-        logger.critical(e)
-        return Response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content=str(e)
-        )
-
-
-@router.delete(
-    "/delete",
-    tags=["users"],
-    summary="Delete a user via DELETE",
-    description="Proxies a DELETE request to remove a user from the backend service."
-)
-async def delete_user(request: Request) -> Response:
-    """
-    Delete a user using DELETE method.
-
-    Args:
-        request: The incoming FastAPI Request.
-
-    Returns:
-        Response: A FastAPI Response with the backend's response content and status code.
-
-    Raises:
-        httpx.HTTPStatusError: If the backend service returns an error.
-    """
-    try:
-        response: httpx.Response = await proxy_request(
-            request=request,
-            method="delete",
-            endpoint="/delete"
-        )
-        if response.status_code == status.HTTP_200_OK:
-            logger.warning(response)
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_202_ACCEPTED:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_202_ACCEPTED,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_204_NO_CONTENT:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_204_NO_CONTENT,
-                content=response.content
-            )
-        else:
-            logger.warning(response.status_code)
-            return Response(
-                status_code=response.status_code,
-                content=response.content
-            )
-    except httpx.HTTPStatusError as e:
-        logger.critical(e)
-        return Response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content=str(e)
-        )
-
-
-@router.patch(
-    "/update",
-    tags=["users"],
-    summary="Update a user via PATCH",
-    description="Proxies a PATCH request to partially update a user in the backend service."
-)
-async def patch_user(request: Request) -> Response:
-    """
-    Update a user using PATCH method (partial update).
-
-    Args:
-        request: The incoming FastAPI Request containing user update data.
-
-    Returns:
-        Response: A FastAPI Response with the backend's response content and status code.
-
-    Raises:
-        httpx.HTTPStatusError: If the backend service returns an error.
-    """
-    try:
-        response: httpx.Response = await proxy_request(
-            request=request,
-            method="patch",
-            endpoint="/update"
-        )
-        if response.status_code == status.HTTP_200_OK:
-            logger.warning(response)
-            return Response(
-                status_code=status.HTTP_200_OK,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_202_ACCEPTED:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_202_ACCEPTED,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_204_NO_CONTENT:
-            logger.debug(response)
-            return Response(
-                status_code=status.HTTP_204_NO_CONTENT,
-                content=response.content
-            )
-        else:
-            logger.warning(response.status_code)
-            return Response(
-                status_code=response.status_code,
-                content=response.content
-            )
-    except httpx.HTTPStatusError as e:
-        logger.critical(e)
-        return Response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content=str(e)
-        )
-
-
 @router.get(
-    "/get",
+    "/",
     tags=["users"],
     summary="Get a user via GET",
     description="Proxies a GET request to retrieve a user from the backend service."

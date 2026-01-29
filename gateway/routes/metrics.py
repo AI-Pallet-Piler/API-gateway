@@ -14,8 +14,7 @@ from prometheus_client import (
     Gauge,
     generate_latest,
     CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-    to_float
+    CollectorRegistry
 )
 from datetime import datetime
 
@@ -181,14 +180,14 @@ async def metrics_json() -> Dict[str, Any]:
     metrics_data: Dict[str, Any] = {
         "timestamp": datetime.utcnow().isoformat(),
         "requests": {
-            "total": to_float(REQUEST_COUNT),
+            "total": float(REQUEST_COUNT),
             "by_endpoint": {},
         },
         "errors": {
-            "total": to_float(ERROR_COUNT),
+            "total": float(ERROR_COUNT),
             "by_type": {},
         },
-        "active_connections": to_float(ACTIVE_CONNECTIONS),
+        "active_connections": float(ACTIVE_CONNECTIONS),
     }
 
     # Collect endpoint-specific metrics

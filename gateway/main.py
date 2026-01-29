@@ -194,10 +194,10 @@ logger = create_logger(logger_name="api_gateway")
 
 
 if __name__ == '__main__':
-    """
-    Main entry point for running the API Gateway.
-
-    Executes run_with_graceful_shutdown() to start the server with
-    graceful shutdown handling.
-    """
     asyncio.run(run_with_graceful_shutdown())
+    # """
+    # Main entry point for running the API Gateway.
+    #
+    # Executes run_with_graceful_shutdown() to start the server with
+    # graceful shutdown handling.
+    # """
