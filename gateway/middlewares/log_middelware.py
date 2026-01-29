@@ -12,6 +12,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from gateway.routes.metrics import MetricsMiddleware
+from gateway.loggers.logger import create_logger
+
+# Create logger for this module
+logger = create_logger("gateway.middlewares.log")
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -49,11 +53,40 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         """
         start_time: float = time.time()
 
+        # Get request ID for tracing
+        from gateway.middlewares.request_id import get_request_id
+        request_id = get_request_id() or "N/A"
+
+        # Log request details
+        logger.info(
+            "Incoming request",
+            extra={
+                "event": "request_start",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "query_params": str(request.query_params),
+            }
+        )
+
         # Process the request
         response: Response = await call_next(request)
 
         # Calculate duration
         duration: float = time.time() - start_time
+
+        # Log response details
+        logger.info(
+            "Request completed",
+            extra={
+                "event": "request_end",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round(duration * 1000, 2),
+            }
+        )
 
         # Record metrics
         MetricsMiddleware.record_request(
