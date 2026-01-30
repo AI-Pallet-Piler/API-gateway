@@ -93,7 +93,7 @@ async def replace_user_by_id(
         response: httpx.Response = await proxy_request(
             request=request,
             method="get",
-            endpoint=f"/{user_id}"
+            endpoint=f"/users/{user_id}"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
@@ -149,8 +149,8 @@ async def replace_user_by_id(
     try:
         response: httpx.Response = await proxy_request(
             request=request,
-            method="get",
-            endpoint=f"/{user_id}"
+            method="put",
+            endpoint=f"/users/{user_id}"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
@@ -206,8 +206,8 @@ async def replace_user_by_id(
     try:
         response: httpx.Response = await proxy_request(
             request=request,
-            method="get",
-            endpoint=f"/{user_id}"
+            method="patch",
+            endpoint=f"/users/{user_id}"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
@@ -263,8 +263,8 @@ async def replace_user_by_id(
     try:
         response: httpx.Response = await proxy_request(
             request=request,
-            method="get",
-            endpoint=f"/{user_id}"
+            method="delete",
+            endpoint=f"/users/{user_id}"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
@@ -376,7 +376,7 @@ async def get_user(request: Request) -> Response:
         response: httpx.Response = await proxy_request(
             request=request,
             method="get",
-            endpoint="/get"
+            endpoint="/users/"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.warning(response)
