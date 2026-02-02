@@ -131,7 +131,7 @@ def setup_logging(
                 "stream": "ext://sys.stdout",
             },
             "rotating_file": {
-                "class": RotatingFileHandler,
+                "class": "logging.handlers.RotatingFileHandler",
                 "level": "INFO",
                 "formatter": "json",
                 "filename": filename,
