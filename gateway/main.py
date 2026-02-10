@@ -22,8 +22,7 @@ from gateway.middlewares import (
     size_check_middelware,
     exception_handler
 )
-from gateway.routes import users, health, metrics
-
+from gateway.routes import users, health, metrics, extras
 
 # Global HTTP client reference
 http_client: Optional[httpx.AsyncClient] = None
@@ -186,6 +185,8 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(users.router)
 router.include_router(metrics.router)
 
+router.include_router(extras.router)
+
 app.include_router(router)
 
 # Set up logging for the main application
@@ -194,6 +195,7 @@ logger = create_logger(logger_name="api_gateway")
 
 
 if __name__ == '__main__':
+    logger.info("Starting API Gateway")
     asyncio.run(run_with_graceful_shutdown())
     # """
     # Main entry point for running the API Gateway.

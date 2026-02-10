@@ -27,6 +27,9 @@ WORKDIR /app
 
 COPY --from=builder /venv /venv
 COPY . .
+
+HEALTHCHECK CMD curl --fail http://localhost:8080/health || exit 1
+
 RUN chown -R appuser:appuser /app
 
 USER appuser
