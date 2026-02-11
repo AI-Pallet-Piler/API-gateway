@@ -70,6 +70,63 @@ async def proxy_request(
     return response
 
 @router.get(
+    "",
+    tags=["users"],
+    summary="List all users",
+    description="Proxies a GET request to retrieve all users from the backend service."
+)
+@router.get(
+    "/",
+    tags=["users"],
+    summary="List all users",
+    description="Proxies a GET request to retrieve all users from the backend service."
+)
+async def list_users(request: Request) -> Response:
+    """
+    List all users.
+
+    Args:
+        request: The incoming FastAPI Request.
+
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint="/users"
+        )
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug("Successfully retrieved users list")
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content,
+                media_type="application/json"
+            )
+        else:
+            logger.warning(f"Unexpected status code: {response.status_code}")
+            return Response(
+                status_code=response.status_code,
+                content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(f"HTTP error: {e}")
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+    except Exception as e:
+        logger.critical(f"Unexpected error: {e}")
+        return Response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=str(e)
+        )
+
+@router.get(
     "/{user_id}",
     tags=["users"],
     summary="Get user by ID",
