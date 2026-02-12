@@ -5,8 +5,6 @@ This module provides the Settings class that loads configuration from
 environment variables and .env files using Pydantic Settings.
 """
 
-import os
-from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -37,6 +35,5 @@ class Settings(BaseSettings):
     check_upstream_services: bool = False
 
     model_config = SettingsConfigDict(
-        env_file=os.path.join(Path(__file__).parent.parent, ".env"),
         extra="ignore"  # Ignore unknown environment variables
     )
