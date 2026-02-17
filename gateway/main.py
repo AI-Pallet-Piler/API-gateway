@@ -22,7 +22,7 @@ from gateway.middlewares import (
     size_check_middelware,
     exception_handler
 )
-from gateway.routes import users, health, metrics, extras
+from gateway.routes import users, health, metrics, extras, auth
 
 # Global HTTP client reference
 http_client: Optional[httpx.AsyncClient] = None
@@ -184,8 +184,8 @@ app.include_router(health.router, prefix="/health", tags=["health"])
 router = APIRouter(prefix="/api/v1")
 router.include_router(users.router)
 router.include_router(metrics.router)
-
 router.include_router(extras.router)
+router.include_router(auth.router)
 
 app.include_router(router)
 

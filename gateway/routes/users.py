@@ -69,6 +69,39 @@ async def proxy_request(
     )
     return response
 
+
+@router.get(
+    "/badge/{badge_number}",
+    tags=["users"],
+    summary="Get user by badge number",
+    description="Proxies a GET request to retrieve a user by their badge number (for picker login)."
+)
+async def get_user_by_badge(
+    request: Request,
+    badge_number: str = Path(..., description="The badge number of the user")
+) -> Response:
+    """
+    Get a user by their badge number (used for picker login).
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="get",
+            endpoint=f"/users/badge/{badge_number}"
+        )
+        return Response(
+            status_code=response.status_code,
+            content=response.content,
+            media_type="application/json"
+        )
+    except httpx.HTTPStatusError as e:
+        logger.critical(e)
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+
+
 @router.get(
     "/{user_id}",
     tags=["users"],
@@ -320,7 +353,7 @@ async def create_user(request: Request) -> Response:
         response: httpx.Response = await proxy_request(
             request=request,
             method="put",
-            endpoint="/create"
+            endpoint="/users/create"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
