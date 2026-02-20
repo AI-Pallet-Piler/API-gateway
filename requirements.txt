@@ -6,3 +6,7 @@ uvicorn
 requests
 starlette
 pytest
+pydantic-settings
+prometheus_client
+boto3
+boto3-stubs
