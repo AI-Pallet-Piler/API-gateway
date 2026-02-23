@@ -22,7 +22,9 @@ from gateway.middlewares import (
     size_check_middelware,
     exception_handler
 )
-from gateway.routes import users, health, metrics, extras, auth
+
+from gateway.routes import users, health, metrics, extras, auth, products, inventory, orders
+
 
 # Global HTTP client reference
 http_client: Optional[httpx.AsyncClient] = None
@@ -84,7 +86,7 @@ def create_app() -> FastAPI:
     Returns:
         FastAPI: A fully configured FastAPI application instance.
     """
-    return FastAPI(lifespan=lifespan)
+    return FastAPI(lifespan=lifespan, redirect_slashes=False)
 
 
 # Create the FastAPI application
@@ -143,7 +145,7 @@ async def run_with_graceful_shutdown() -> None:
     config = uvicorn.Config(
         app=app,
         host="0.0.0.0",
-        port=8000,
+        port=8080,
     )
     server = uvicorn.Server(config=config)
     server_task = asyncio.create_task(server.serve())
@@ -183,6 +185,9 @@ app.add_middleware(
 app.include_router(health.router, prefix="/health", tags=["health"])
 router = APIRouter(prefix="/api/v1")
 router.include_router(users.router)
+router.include_router(products.router)
+router.include_router(inventory.router)
+router.include_router(orders.router)
 router.include_router(metrics.router)
 router.include_router(extras.router)
 router.include_router(auth.router)
