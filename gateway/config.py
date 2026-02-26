@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     """
 
     url_backend: str = "http://httpbin.org/anything"
+    security_api_url: str = "http://security-api:8000"
     check_upstream_services: bool = False
 
     model_config = SettingsConfigDict(
