@@ -21,7 +21,7 @@ Main Components:
     - middlewares: Request processing middleware
     - routes: API route handlers for all services
     - other: Utilities including exceptions
-    
+
 
 Usage:
     Run the gateway as a standalone service:

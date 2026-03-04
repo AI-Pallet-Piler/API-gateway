@@ -109,7 +109,6 @@ API-gateway/
 │   │   └── size_check_middelware.py # Request size validation
 │   ├── other/
 │   │   ├── __init__.py
-│   │   ├── datadog.py           # Datadog integration
 │   │   └── exceptions.py         # Custom exception classes
 │   └── routes/
 │       ├── __init__.py
