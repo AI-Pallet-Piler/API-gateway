@@ -1,7 +1,7 @@
 """
-Product routes module for the API Gateway.
+Report routes module for the API Gateway.
 
-This module handles all product-related proxy requests to the backend service,
+This module handles all report-related proxy requests to the backend service,
 including CRUD operations (Create, Read, Update, Delete).
 """
 
@@ -17,14 +17,14 @@ from gateway.middlewares.request_id import get_request_id
 
 
 # Create APIRouter instance with prefix and tags for OpenAPI documentation
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/reports", tags=["reports"])
 
 # Initialize settings from configuration
 settings = config.Settings()
 
 # Set up logging for this module
-setup_logging(logger_name="products", filename="logs/api_gateway.log")
-logger = create_logger(logger_name="products")
+setup_logging(logger_name="reports", filename="logs/api_gateway.log")
+logger = create_logger(logger_name="reports")
 
 # Create async HTTP client for proxying requests
 client = httpx.AsyncClient(timeout=30.0)
@@ -72,39 +72,39 @@ async def proxy_request(
 
 @router.get(
     "",
-    tags=["products"],
-    summary="List all products",
-    description="Proxies a GET request to retrieve all products from the backend service with optional filtering."
+    tags=["reports"],
+    summary="List all reports",
+    description="Proxies a GET request to retrieve all reports from the backend service with optional filtering."
 )
 @router.get(
     "/",
-    tags=["products"],
-    summary="List all products",
-    description="Proxies a GET request to retrieve all products from the backend service with optional filtering."
+    tags=["reports"],
+    summary="List all reports",
+    description="Proxies a GET request to retrieve all reports from the backend service with optional filtering."
 )
-async def list_products(
+async def list_reports(
     request: Request,
-    search: str = Query(None, description="Filter by SKU or name"),
+    order_id: int = Query(None, description="Filter by order ID"),
+    issue_type: str = Query(None, description="Filter by issue type (damage, missing, blocked, other)"),
     skip: int = Query(0, ge=0, description="Number of items to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of items to return"),
-    sort_by_pick_frequency: bool = Query(False, description="Sort by pick frequency")
+    limit: int = Query(100, ge=1, le=500, description="Maximum number of items to return")
 ) -> Response:
     """
-    List all products with optional filtering and pagination.
+    List all reports with optional filtering and pagination.
     
-    Proxies to Backend GET /products or GET /products/
+    Proxies to Backend GET /reports or GET /reports/
     
-    Retrieves products from the backend with support for:
-    - Text search by SKU or product name
+    Retrieves reports from the backend with support for:
+    - Filtering by order ID
+    - Filtering by issue type (damage, missing, blocked, other)
     - Pagination via skip/limit
-    - Sorting by pick frequency
     
     Args:
         request: The incoming FastAPI Request.
-        search: Optional search term for SKU or name.
-        skip: Number of products to skip (pagination).
-        limit: Maximum number of products to return.
-        sort_by_pick_frequency: Whether to sort by pick frequency.
+        order_id: Optional filter by order ID.
+        issue_type: Optional filter by issue type.
+        skip: Number of reports to skip (pagination).
+        limit: Maximum number of reports to return.
     
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
@@ -113,30 +113,37 @@ async def list_products(
         httpx.HTTPStatusError: If the backend service returns an error.
     
     Example:
-        >>> curl "http://localhost:8080/api/v1/products?search=widget&limit=10"
+        >>> curl "http://localhost:8080/api/v1/reports?issue_type=damage&limit=20"
+
+
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
     """
     try:
         # Build query parameters
         query_params = []
-        if search:
-            query_params.append(f"search={search}")
+        if order_id is not None:
+            query_params.append(f"order_id={order_id}")
+        if issue_type:
+            query_params.append(f"issue_type={issue_type}")
         if skip:
             query_params.append(f"skip={skip}")
         if limit:
             query_params.append(f"limit={limit}")
-        if sort_by_pick_frequency:
-            query_params.append(f"sort_by_pick_frequency={sort_by_pick_frequency}")
         
         query_string = f"?{'&'.join(query_params)}" if query_params else ""
         
         response: httpx.Response = await proxy_request(
             request=request,
             method="get",
-            endpoint=f"/products{query_string}"
+            endpoint=f"/reports{query_string}"
         )
         
         if response.status_code == status.HTTP_200_OK:
-            logger.debug(f"Successfully retrieved products list")
+            logger.debug(f"Successfully retrieved reports list")
             return Response(
                 status_code=status.HTTP_200_OK,
                 content=response.content,
@@ -163,21 +170,21 @@ async def list_products(
 
 
 @router.get(
-    "/{product_id}",
-    tags=["products"],
-    summary="Get product by ID",
-    description="Proxies a GET request to retrieve a single product by ID from the backend service."
+    "/{report_id}",
+    tags=["reports"],
+    summary="Get a specific report",
+    description="Proxies a GET request to retrieve a specific report by ID from the backend service."
 )
-async def get_product_by_id(
+async def get_report(
     request: Request,
-    product_id: int = Path(..., description="The unique identifier of the product")
+    report_id: int = Path(..., ge=1, description="The report ID")
 ) -> Response:
     """
-    Get a single product by its ID.
+    Get a specific report by ID.
 
     Args:
         request: The incoming FastAPI Request.
-        product_id: The unique identifier of the product.
+        report_id: The ID of the report to retrieve.
 
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
@@ -189,21 +196,14 @@ async def get_product_by_id(
         response: httpx.Response = await proxy_request(
             request=request,
             method="get",
-            endpoint=f"/products/{product_id}"
+            endpoint=f"/reports/{report_id}"
         )
         
-        if response.status_code == status.HTTP_200_OK:
-            logger.debug(f"Successfully retrieved product {product_id}")
+        if response.status_code in (status.HTTP_200_OK, status.HTTP_404_NOT_FOUND):
             return Response(
-                status_code=status.HTTP_200_OK,
+                status_code=response.status_code,
                 content=response.content,
                 media_type="application/json"
-            )
-        elif response.status_code == status.HTTP_404_NOT_FOUND:
-            logger.warning(f"Product {product_id} not found")
-            return Response(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content=response.content
             )
         else:
             logger.warning(f"Unexpected status code: {response.status_code}")
@@ -227,24 +227,22 @@ async def get_product_by_id(
 
 @router.post(
     "",
-    tags=["products"],
-    summary="Create a new product",
-    description="Proxies a POST request to create a new product in the backend service."
+    tags=["reports"],
+    summary="Create a new report",
+    description="Proxies a POST request to create a new report in the backend service."
 )
 @router.post(
     "/",
-    tags=["products"],
-    summary="Create a new product",
-    description="Proxies a POST request to create a new product in the backend service."
+    tags=["reports"],
+    summary="Create a new report",
+    description="Proxies a POST request to create a new report in the backend service."
 )
-async def create_product(
-    request: Request
-) -> Response:
+async def create_report(request: Request) -> Response:
     """
-    Create a new product.
+    Create a new report.
 
     Args:
-        request: The incoming FastAPI Request containing product data.
+        request: The incoming FastAPI Request with report data in the body.
 
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
@@ -256,21 +254,14 @@ async def create_product(
         response: httpx.Response = await proxy_request(
             request=request,
             method="post",
-            endpoint="/products"
+            endpoint="/reports"
         )
         
-        if response.status_code == status.HTTP_201_CREATED:
-            logger.debug("Successfully created product")
+        if response.status_code in (status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND):
             return Response(
-                status_code=status.HTTP_201_CREATED,
+                status_code=response.status_code,
                 content=response.content,
                 media_type="application/json"
-            )
-        elif response.status_code == status.HTTP_400_BAD_REQUEST:
-            logger.warning("Bad request when creating product")
-            return Response(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content=response.content
             )
         else:
             logger.warning(f"Unexpected status code: {response.status_code}")
@@ -293,21 +284,21 @@ async def create_product(
 
 
 @router.put(
-    "/{product_id}",
-    tags=["products"],
-    summary="Update product by ID",
-    description="Proxies a PUT request to fully update a product by ID in the backend service."
+    "/{report_id}",
+    tags=["reports"],
+    summary="Update a report",
+    description="Proxies a PUT request to update an existing report in the backend service."
 )
-async def update_product(
+async def update_report(
     request: Request,
-    product_id: int = Path(..., description="The unique identifier of the product")
+    report_id: int = Path(..., ge=1, description="The report ID")
 ) -> Response:
     """
-    Fully update a product by its ID.
+    Update an existing report.
 
     Args:
-        request: The incoming FastAPI Request containing updated product data.
-        product_id: The unique identifier of the product to update.
+        request: The incoming FastAPI Request with updated report data in the body.
+        report_id: The ID of the report to update.
 
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
@@ -319,27 +310,14 @@ async def update_product(
         response: httpx.Response = await proxy_request(
             request=request,
             method="put",
-            endpoint=f"/products/{product_id}"
+            endpoint=f"/reports/{report_id}"
         )
         
-        if response.status_code == status.HTTP_200_OK:
-            logger.debug(f"Successfully updated product {product_id}")
+        if response.status_code in (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND):
             return Response(
-                status_code=status.HTTP_200_OK,
+                status_code=response.status_code,
                 content=response.content,
                 media_type="application/json"
-            )
-        elif response.status_code == status.HTTP_404_NOT_FOUND:
-            logger.warning(f"Product {product_id} not found for update")
-            return Response(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content=response.content
-            )
-        elif response.status_code == status.HTTP_400_BAD_REQUEST:
-            logger.warning("Bad request when updating product")
-            return Response(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content=response.content
             )
         else:
             logger.warning(f"Unexpected status code: {response.status_code}")
@@ -362,24 +340,24 @@ async def update_product(
 
 
 @router.delete(
-    "/{product_id}",
-    tags=["products"],
-    summary="Delete product by ID",
-    description="Proxies a DELETE request to delete a product by ID in the backend service."
+    "/{report_id}",
+    tags=["reports"],
+    summary="Delete a report",
+    description="Proxies a DELETE request to delete a report from the backend service."
 )
-async def delete_product(
+async def delete_report(
     request: Request,
-    product_id: int = Path(..., description="The unique identifier of the product")
+    report_id: int = Path(..., ge=1, description="The report ID")
 ) -> Response:
     """
-    Delete a product by its ID.
+    Delete a report by ID.
 
     Args:
         request: The incoming FastAPI Request.
-        product_id: The unique identifier of the product to delete.
+        report_id: The ID of the report to delete.
 
     Returns:
-        Response: A FastAPI Response with the backend's response content and status code.
+        Response: A FastAPI Response with status 204 No Content on success.
 
     Raises:
         httpx.HTTPStatusError: If the backend service returns an error.
@@ -388,18 +366,12 @@ async def delete_product(
         response: httpx.Response = await proxy_request(
             request=request,
             method="delete",
-            endpoint=f"/products/{product_id}"
+            endpoint=f"/reports/{report_id}"
         )
         
-        if response.status_code == status.HTTP_204_NO_CONTENT:
-            logger.debug(f"Successfully deleted product {product_id}")
+        if response.status_code in (status.HTTP_204_NO_CONTENT, status.HTTP_404_NOT_FOUND):
             return Response(
-                status_code=status.HTTP_204_NO_CONTENT
-            )
-        elif response.status_code == status.HTTP_404_NOT_FOUND:
-            logger.warning(f"Product {product_id} not found for deletion")
-            return Response(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=response.status_code,
                 content=response.content
             )
         else:

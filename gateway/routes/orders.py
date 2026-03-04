@@ -92,20 +92,31 @@ async def list_orders(
 ) -> Response:
     """
     List all orders with optional filtering and pagination.
-
+    
+    Proxies to Backend GET /orders or GET /orders/
+    
+    Retrieves orders from the backend with support for:
+    - Filtering by order status (new, picking, packing, shipped, cancelled)
+    - Filtering by priority level (1-5, where 1 is highest)
+    - Filtering by customer name
+    - Pagination via skip/limit
+    
     Args:
         request: The incoming FastAPI Request.
         status_filter: Optional filter by order status.
-        priority: Optional filter by priority level.
+        priority: Optional filter by priority level (1-5).
         customer_name: Optional filter by customer name.
         skip: Number of orders to skip (pagination).
         limit: Maximum number of orders to return.
-
+    
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
-
+    
     Raises:
         httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl "http://localhost:8080/api/v1/orders?status_filter=picking&priority=1"
     """
     try:
         # Build query parameters
@@ -531,6 +542,73 @@ async def get_order_lines(
             return Response(
                 status_code=response.status_code,
                 content=response.content
+            )
+    except httpx.HTTPStatusError as e:
+        logger.critical(f"HTTP error: {e}")
+        return Response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=str(e)
+        )
+    except Exception as e:
+        logger.critical(f"Unexpected error: {e}")
+        return Response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=str(e)
+        )
+
+
+@router.patch(
+    "/{order_id}/lines/{order_line_id}",
+    tags=["orders"],
+    summary="Update order line picked quantity",
+    description="Proxies a PATCH request to update the picked quantity of a specific order line."
+)
+async def update_order_line_picked(
+    request: Request,
+    order_id: int = Path(..., description="The unique identifier of the order"),
+    order_line_id: int = Path(..., description="The unique identifier of the order line"),
+) -> Response:
+    """
+    Update the quantity_picked for a specific order line.
+
+    Args:
+        request: The incoming FastAPI Request.
+        order_id: The unique identifier of the order.
+        order_line_id: The unique identifier of the order line.
+
+    Returns:
+        Response: A FastAPI Response with the updated order line.
+
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    """
+    try:
+        response: httpx.Response = await proxy_request(
+            request=request,
+            method="patch",
+            endpoint=f"/orders/{order_id}/lines/{order_line_id}"
+        )
+
+        if response.status_code == status.HTTP_200_OK:
+            logger.debug(f"Successfully updated order line {order_line_id} for order {order_id}")
+            return Response(
+                status_code=status.HTTP_200_OK,
+                content=response.content,
+                media_type="application/json"
+            )
+        elif response.status_code == status.HTTP_404_NOT_FOUND:
+            logger.warning(f"Order {order_id} or line {order_line_id} not found")
+            return Response(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content=response.content,
+                media_type="application/json"
+            )
+        else:
+            logger.warning(f"Unexpected status code: {response.status_code}")
+            return Response(
+                status_code=response.status_code,
+                content=response.content,
+                media_type="application/json"
             )
     except httpx.HTTPStatusError as e:
         logger.critical(f"HTTP error: {e}")

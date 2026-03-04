@@ -22,7 +22,7 @@ from gateway.middlewares import (
     size_check_middelware,
     exception_handler
 )
-from gateway.routes import users, products, inventory, orders, health, metrics, extras
+from gateway.routes import users, products, inventory, orders, reports, health, metrics, extras, auth, navigation
 
 # Global HTTP client reference
 http_client: Optional[httpx.AsyncClient] = None
@@ -136,6 +136,18 @@ async def run_with_graceful_shutdown() -> None:
 
     The shutdown timeout can be configured via GRACEFUL_SHUTDOWN_TIMEOUT
     environment variable (default: 30 seconds).
+    
+    Environment Variables:
+        GRACEFUL_SHUTDOWN_TIMEOUT: Timeout in seconds for graceful shutdown (default: 30)
+        MAX_CONNECTIONS_DRAIN_TIME: Time in seconds to wait for connections to drain (default: 10)
+    
+    Signals Handled:
+        SIGTERM: Kubernetes/container orchestration shutdown signal
+        SIGINT: Ctrl+C interrupt signal
+    
+    Example:
+        >>> import asyncio
+        >>> asyncio.run(run_with_graceful_shutdown())
     """
     shutdown_event = setup_signal_handlers()
 
@@ -182,10 +194,13 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/health", tags=["health"])
 router = APIRouter(prefix="/api/v1")
+router.include_router(auth.router)
 router.include_router(users.router)
 router.include_router(products.router)
 router.include_router(inventory.router)
 router.include_router(orders.router)
+router.include_router(reports.router)
+router.include_router(navigation.router)
 router.include_router(metrics.router)
 
 router.include_router(extras.router)

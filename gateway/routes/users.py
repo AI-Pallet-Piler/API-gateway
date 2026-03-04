@@ -84,15 +84,23 @@ async def proxy_request(
 async def list_users(request: Request) -> Response:
     """
     List all users.
-
+    
+    Proxies to Backend GET /users or GET /users/
+    
+    Retrieves all users from the backend service. Returns user information
+    including IDs, email addresses, roles, and other profile data.
+    
     Args:
         request: The incoming FastAPI Request.
-
+    
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
-
+    
     Raises:
         httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl http://localhost:8080/api/v1/users
     """
     try:
         response: httpx.Response = await proxy_request(
@@ -377,7 +385,7 @@ async def create_user(request: Request) -> Response:
         response: httpx.Response = await proxy_request(
             request=request,
             method="put",
-            endpoint="/create"
+            endpoint="/users/create"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
