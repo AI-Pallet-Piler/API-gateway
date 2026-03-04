@@ -46,7 +46,7 @@ async def proxy_request(
         The response from the security-api service.
     """
     # Get the security API URL from config or environment
-    security_api_url = os.getenv("SECURITY_API_URL")
+    security_api_url = settings.security_api_url
     logger.info(f"Using SECURITY_API_URL: {security_api_url}")
     
     # Build the full URL
