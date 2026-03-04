@@ -136,6 +136,18 @@ async def run_with_graceful_shutdown() -> None:
 
     The shutdown timeout can be configured via GRACEFUL_SHUTDOWN_TIMEOUT
     environment variable (default: 30 seconds).
+    
+    Environment Variables:
+        GRACEFUL_SHUTDOWN_TIMEOUT: Timeout in seconds for graceful shutdown (default: 30)
+        MAX_CONNECTIONS_DRAIN_TIME: Time in seconds to wait for connections to drain (default: 10)
+    
+    Signals Handled:
+        SIGTERM: Kubernetes/container orchestration shutdown signal
+        SIGINT: Ctrl+C interrupt signal
+    
+    Example:
+        >>> import asyncio
+        >>> asyncio.run(run_with_graceful_shutdown())
     """
     shutdown_event = setup_signal_handlers()
 

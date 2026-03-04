@@ -92,20 +92,31 @@ async def list_orders(
 ) -> Response:
     """
     List all orders with optional filtering and pagination.
-
+    
+    Proxies to Backend GET /orders or GET /orders/
+    
+    Retrieves orders from the backend with support for:
+    - Filtering by order status (new, picking, packing, shipped, cancelled)
+    - Filtering by priority level (1-5, where 1 is highest)
+    - Filtering by customer name
+    - Pagination via skip/limit
+    
     Args:
         request: The incoming FastAPI Request.
         status_filter: Optional filter by order status.
-        priority: Optional filter by priority level.
+        priority: Optional filter by priority level (1-5).
         customer_name: Optional filter by customer name.
         skip: Number of orders to skip (pagination).
         limit: Maximum number of orders to return.
-
+    
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
-
+    
     Raises:
         httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl "http://localhost:8080/api/v1/orders?status_filter=picking&priority=1"
     """
     try:
         # Build query parameters
