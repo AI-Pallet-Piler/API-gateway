@@ -377,7 +377,7 @@ async def create_user(request: Request) -> Response:
         response: httpx.Response = await proxy_request(
             request=request,
             method="put",
-            endpoint="/create"
+            endpoint="/users/create"
         )
         if response.status_code == status.HTTP_200_OK:
             logger.debug(response)
