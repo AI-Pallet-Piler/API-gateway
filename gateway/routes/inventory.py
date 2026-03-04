@@ -92,12 +92,31 @@ async def list_inventory(
 ) -> Response:
     """
     List all inventory with optional filtering and pagination.
-
+    
+    Proxies to Backend GET /inventory or GET /inventory/
+    
+    Retrieves inventory records from the backend with support for:
+    - Filtering by product ID
+    - Filtering by location ID
+    - Filtering by product SKU
+    - Pagination via skip/limit
+    
     Args:
         request: The incoming FastAPI Request.
         product_id: Optional filter by product ID.
         location_id: Optional filter by location ID.
         sku: Optional filter by product SKU.
+        skip: Number of items to skip (pagination).
+        limit: Maximum number of items to return.
+    
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl "http://localhost:8080/api/v1/inventory?location_id=5&limit=20"
         skip: Number of items to skip (pagination).
         limit: Maximum number of items to return.
 

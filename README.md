@@ -20,6 +20,9 @@ A production-ready API Gateway built with FastAPI, featuring structured JSON log
 - [Project Structure](#project-structure)
 - [Configuration](#configuration)
 - [API Endpoints](#api-endpoints)
+  - [Gateway Management](#gateway-management-endpoints)
+  - [Backend API Routing](#backend-api-routing)
+  - [Security API Routing](#security-api-routing)
 - [Middleware](#middleware)
 - [Logging](#logging)
 - [Metrics](#metrics)
@@ -55,7 +58,7 @@ A production-ready API Gateway built with FastAPI, featuring structured JSON log
 ```powershell
 # Create virtual environment and install dependencies
 python .\create_venv.py
-.\.venv\Scripts\Activate.ps1
+\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
@@ -109,15 +112,24 @@ API-gateway/
 │   │   └── exceptions.py         # Custom exception classes
 │   └── routes/
 │       ├── __init__.py
+│       ├── auth.py              # Authentication endpoints
+│       ├── extras.py            # Extra endpoints
 │       ├── health.py            # Health check endpoints
+│       ├── inventory.py         # Inventory proxy endpoints
 │       ├── metrics.py           # Prometheus metrics endpoint
-│       └── users.py             # User proxy endpoints
+│       ├── navigation.py        # Navigation proxy endpoints
+│       ├── orders.py            # Orders proxy endpoints
+│       ├── products.py          # Products proxy endpoints
+│       ├── reports.py           # Reports proxy endpoints
+│       └── users.py             # Users proxy endpoints
 ├── tests/
 │   ├── __init__.py
+│   ├── test_auth.py
 │   ├── test_gateway.py
 │   └── test_users.py
 ├── logs/                        # Log files directory
 ├── Dockerfile
+├── compose.yml
 ├── prometheus.yml              # Prometheus configuration
 ├── requirements.txt
 └── README.md
@@ -131,7 +143,8 @@ Configuration is managed via environment variables and `.env` files using Pydant
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `URL_BACKEND` | Backend service URL | `""` |
+| `URL_BACKEND` | Backend service URL | `http://httpbin.org/anything` |
+| `SECURITY_API_URL` | Security API URL | `http://security-api:8000` |
 | `CHECK_UPSTREAM_SERVICES` | Enable upstream health checks | `false` |
 | `GRACEFUL_SHUTDOWN_TIMEOUT` | Shutdown timeout in seconds | `30` |
 | `MAX_CONNECTIONS_DRAIN_TIME` | Connection drain time | `10` |
@@ -140,37 +153,76 @@ Configuration is managed via environment variables and `.env` files using Pydant
 
 ```env
 URL_BACKEND=http://backend-service:8000
+SECURITY_API_URL=http://security-api:8000
 CHECK_UPSTREAM_SERVICES=true
 GRACEFUL_SHUTDOWN_TIMEOUT=30
 ```
 
 ## 🔌 API Endpoints
 
-### User Routes (`/api/v1/users`)
+### Gateway Management Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `PUT` | `/api/v1/users/create` | Create a new user |
-| `POST` | `/api/v1/users/create` | Create a new user (POST) |
-| `PUT` | `/api/v1/users/replace` | Replace an existing user |
-| `PATCH` | `/api/v1/users/update` | Partially update a user |
-| `DELETE` | `/api/v1/users/delete` | Delete a user |
-| `GET` | `/api/v1/users/get` | Get user information |
+| `GET` | `/health` | Basic health check for load balancers |
+| `GET` | `/live` | Kubernetes liveness probe |
+| `GET` | `/ready` | Kubernetes readiness probe |
+| `GET` | `/metrics` | Prometheus metrics endpoint |
 
-### Health Routes (`/health`)
+### Backend API Routing
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/health/` | Basic health check |
-| `GET` | `/health/live` | Kubernetes liveness probe |
-| `GET` | `/health/ready` | Kubernetes readiness probe |
-
-### Metrics Routes (`/api/v1`)
+The gateway proxies requests to the Backend service (`URL_BACKEND`):
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/v1/metrics` | Prometheus metrics in text format |
-| `GET` | `/api/v1/metrics/json` | Metrics in JSON format |
+| `GET` | `/api/v1/orders` | List all orders with filtering |
+| `GET` | `/api/v1/orders/{id}` | Get order by ID |
+| `POST` | `/api/v1/orders` | Create a new order |
+| `PUT` | `/api/v1/orders/{id}` | Update an order |
+| `DELETE` | `/api/v1/orders/{id}` | Delete an order |
+| `GET` | `/api/v1/orders/{id}/lines` | Get order lines |
+| `GET` | `/api/v1/orders/{id}/pallet-instructions` | Get pallet instructions |
+| `POST` | `/api/v1/orders/{id}/trigger-packing` | Trigger packing |
+| `GET` | `/api/v1/products` | List all products |
+| `GET` | `/api/v1/products/{id}` | Get product by ID |
+| `POST` | `/api/v1/products` | Create a new product |
+| `PUT` | `/api/v1/products/{id}` | Update a product |
+| `DELETE` | `/api/v1/products/{id}` | Delete a product |
+| `GET` | `/api/v1/inventory` | List all inventory |
+| `GET` | `/api/v1/inventory/{id}` | Get inventory by ID |
+| `POST` | `/api/v1/inventory` | Create inventory record |
+| `PUT` | `/api/v1/inventory/{id}` | Update inventory |
+| `DELETE` | `/api/v1/inventory/{id}` | Delete inventory |
+| `GET` | `/api/v1/users` | List all users |
+| `GET` | `/api/v1/users/{id}` | Get user by ID |
+| `POST` | `/api/v1/users` | Create a new user |
+| `PUT` | `/api/v1/users/{id}` | Update a user |
+| `DELETE` | `/api/v1/users/{id}` | Delete a user |
+| `GET` | `/api/v1/users/badge/{badge_number}` | Get user by badge |
+| `GET` | `/api/v1/users/by-email` | Get user by email |
+| `GET` | `/api/v1/navigation/map` | Get warehouse map |
+| `GET` | `/api/v1/navigation/locations` | Get all locations |
+| `GET` | `/api/v1/navigation/path/code/{from}/{to}` | Get path by codes |
+| `GET` | `/api/v1/navigation/path/{from_shelf}/{to_shelf}` | Get path by shelf IDs |
+| `POST` | `/api/v1/navigation/generate-and-sync` | Generate and sync navigation |
+| `GET` | `/api/v1/reports` | List all reports |
+| `GET` | `/api/v1/reports/{id}` | Get report by ID |
+| `POST` | `/api/v1/reports` | Create a new report |
+| `PUT` | `/api/v1/reports/{id}` | Update a report |
+| `DELETE` | `/api/v1/reports/{id}` | Delete a report |
+| `GET` | `/api/v1/health` | Backend health check |
+
+### Security API Routing
+
+The gateway proxies authentication requests to the Security API (`SECURITY_API_URL`):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/auth/v1/login` | Email/password login |
+| `POST` | `/auth/v1/login-badge` | Badge-based login |
+| `POST` | `/auth/v1/refresh` | Refresh access token |
+| `POST` | `/auth/v1/logout` | Logout and invalidate token |
+| `POST` | `/auth/v1/validate` | Validate access token |
 
 ## 🧩 Middleware
 
@@ -228,7 +280,7 @@ Logs are formatted as JSON with the following structure:
 
 - Location: `logs/api_gateway.log`
 - Rotation: 10MB per file
-- Backup count: 5 files
+- Backup count: 10 files
 
 ### Logger Usage
 
@@ -265,7 +317,7 @@ The gateway exposes the following Prometheus metrics:
 
 ```bash
 # Prometheus format
-curl http://localhost:8000/api/v1/metrics
+curl http://localhost:8000/metrics
 
 # JSON format
 curl http://localhost:8000/api/v1/metrics/json
@@ -273,18 +325,18 @@ curl http://localhost:8000/api/v1/metrics/json
 
 ## 💓 Health Checks
 
-### Basic Health Check (`GET /health/`)
+### Basic Health Check (`GET /health`)
 
 Returns basic gateway status.
 
 ```json
 {
-  "status": "ok",
+  "status": "healthy",
   "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
 
-### Liveness Probe (`GET /health/live`)
+### Liveness Probe (`GET /live`)
 
 Kubernetes liveness probe - lightweight check.
 
@@ -294,17 +346,15 @@ Kubernetes liveness probe - lightweight check.
 }
 ```
 
-### Readiness Probe (`GET /health/ready`)
+### Readiness Probe (`GET /ready`)
 
 Kubernetes readiness probe - checks upstream services.
 
 ```json
 {
-  "status": "healthy",
-  "components": {
-    "users_service": {"status": "healthy"},
-    "auth_service": {"status": "healthy"}
-  }
+  "status": "ready",
+  "backend": "connected",
+  "security_api": "connected"
 }
 ```
 
@@ -352,6 +402,7 @@ docker build -t api-gateway .
 docker run -d \
   -p 8000:8000 \
   -e URL_BACKEND=http://backend:8000 \
+  -e SECURITY_API_URL=http://security-api:8000 \
   --name api-gateway \
   api-gateway
 ```
@@ -368,6 +419,7 @@ services:
       - "8000:8000"
     environment:
       - URL_BACKEND=http://backend-service:8000
+      - SECURITY_API_URL=http://security-api:8000
       - CHECK_UPSTREAM_SERVICES=true
     volumes:
       - ./logs:/app/logs
@@ -393,6 +445,7 @@ pytest tests/test_users.py
 The project includes unit tests for:
 
 - User routes
+- Authentication
 - Exception handling
 - Middleware functionality
 

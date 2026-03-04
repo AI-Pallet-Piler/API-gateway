@@ -91,19 +91,29 @@ async def list_products(
 ) -> Response:
     """
     List all products with optional filtering and pagination.
-
+    
+    Proxies to Backend GET /products or GET /products/
+    
+    Retrieves products from the backend with support for:
+    - Text search by SKU or product name
+    - Pagination via skip/limit
+    - Sorting by pick frequency
+    
     Args:
         request: The incoming FastAPI Request.
         search: Optional search term for SKU or name.
         skip: Number of products to skip (pagination).
         limit: Maximum number of products to return.
         sort_by_pick_frequency: Whether to sort by pick frequency.
-
+    
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.
-
+    
     Raises:
         httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl "http://localhost:8080/api/v1/products?search=widget&limit=10"
     """
     try:
         # Build query parameters

@@ -91,13 +91,30 @@ async def list_reports(
 ) -> Response:
     """
     List all reports with optional filtering and pagination.
-
+    
+    Proxies to Backend GET /reports or GET /reports/
+    
+    Retrieves reports from the backend with support for:
+    - Filtering by order ID
+    - Filtering by issue type (damage, missing, blocked, other)
+    - Pagination via skip/limit
+    
     Args:
         request: The incoming FastAPI Request.
         order_id: Optional filter by order ID.
         issue_type: Optional filter by issue type.
         skip: Number of reports to skip (pagination).
         limit: Maximum number of reports to return.
+    
+    Returns:
+        Response: A FastAPI Response with the backend's response content and status code.
+    
+    Raises:
+        httpx.HTTPStatusError: If the backend service returns an error.
+    
+    Example:
+        >>> curl "http://localhost:8080/api/v1/reports?issue_type=damage&limit=20"
+
 
     Returns:
         Response: A FastAPI Response with the backend's response content and status code.

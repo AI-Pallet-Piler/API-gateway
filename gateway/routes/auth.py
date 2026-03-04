@@ -36,14 +36,25 @@ async def proxy_request(
 ) -> httpx.Response:
     """
     Proxy an incoming request to the Security API service.
-
+    
+    This function forwards authentication requests to the configured Security API
+    service, preserving the HTTP method, request body, and headers while adding
+    a request ID for distributed tracing.
+    
     Args:
         request: The incoming FastAPI Request object.
         method: The HTTP method to use when proxying (e.g., "get", "post").
         endpoint: The security-api endpoint path to proxy to. Defaults to "/".
-
+    
     Returns:
-        The response from the security-api service.
+        httpx.Response: The response from the security-api service.
+    
+    Raises:
+        httpx.HTTPStatusError: If the security API returns an error status code.
+        httpx.RequestError: If there's a network error communicating with the security API.
+    
+    Example:
+        >>> response = await proxy_request(request, "POST", "/login")
     """
     # Get the security API URL from config or environment
     security_api_url = settings.security_api_url
@@ -98,7 +109,27 @@ async def proxy_request(
 async def login(request: Request) -> Response:
     """
     Email/password login endpoint.
-    Proxies to Security API /auth/v1/login
+    
+    Proxies to Security API POST /auth/v1/login
+    
+    Authenticates a user using their email and password credentials.
+    Returns access and refresh tokens upon successful authentication.
+    
+    Request Body:
+        email (str): User's email address
+        password (str): User's password
+    
+    Returns:
+        Response: Token response containing access_token, refresh_token, and token_type
+    
+    Raises:
+        HTTP 401: Invalid email or password
+        HTTP 500: Authentication service error
+    
+    Example:
+        >>> curl -X POST http://localhost:8080/api/v1/auth/login \\
+        >>>   -H "Content-Type: application/json" \\
+        >>>   -d '{"email": "user@example.com", "password": "secret"}'
     """
     try:
         logger.info("Login request received")
@@ -122,8 +153,27 @@ async def login(request: Request) -> Response:
 @router.post("/login-badge")
 async def login_badge(request: Request) -> Response:
     """
-    Badge-based login endpoint for pickers.
-    Proxies to Security API /auth/v1/login-badge
+    Badge-based login endpoint for warehouse pickers.
+    
+    Proxies to Security API POST /auth/v1/login-badge
+    
+    Authenticates a picker using their badge ID instead of email/password.
+    Commonly used in warehouse environments for quick authentication.
+    
+    Request Body:
+        badge_id (str): Picker badge identifier
+    
+    Returns:
+        Response: Token response containing access_token, refresh_token, and token_type
+    
+    Raises:
+        HTTP 401: Invalid badge ID
+        HTTP 500: Authentication service error
+    
+    Example:
+        >>> curl -X POST http://localhost:8080/api/v1/auth/login-badge \\
+        >>>   -H "Content-Type: application/json" \\
+        >>>   -d '{"badge_id": "BADGE12345"}'
     """
     try:
         logger.info("Badge login request received")
@@ -148,7 +198,25 @@ async def login_badge(request: Request) -> Response:
 async def refresh(request: Request) -> Response:
     """
     Token refresh endpoint.
-    Proxies to Security API /auth/v1/refresh
+    
+    Proxies to Security API POST /auth/v1/refresh
+    
+    Refreshes an expired or expiring access token using a valid refresh token.
+    
+    Request Body:
+        refresh_token (str): The refresh token from previous login
+    
+    Returns:
+        Response: New token response with fresh access_token and refresh_token
+    
+    Raises:
+        HTTP 401: Invalid or expired refresh token
+        HTTP 500: Authentication service error
+    
+    Example:
+        >>> curl -X POST http://localhost:8080/api/v1/auth/refresh \\
+        >>>   -H "Content-Type: application/json" \\
+        >>>   -d '{"refresh_token": "eyJhbGc..."}'
     """
     try:
         logger.info("Token refresh request received")
@@ -172,7 +240,24 @@ async def refresh(request: Request) -> Response:
 async def logout(request: Request) -> Response:
     """
     Logout endpoint.
-    Proxies to Security API /auth/v1/logout
+    
+    Proxies to Security API POST /auth/v1/logout
+    
+    Invalidates the current session and tokens. Should be called when
+    the user wants to terminate their session.
+    
+    Request Body:
+        access_token (str): The current access token (optional)
+    
+    Returns:
+        Response: Confirmation of logout success
+    
+    Raises:
+        HTTP 500: Authentication service error
+    
+    Example:
+        >>> curl -X POST http://localhost:8080/api/v1/auth/logout \\
+        >>>   -H "Authorization: Bearer <access_token>"
     """
     try:
         logger.info("Logout request received")
@@ -196,7 +281,27 @@ async def logout(request: Request) -> Response:
 async def validate(request: Request) -> Response:
     """
     Token validation endpoint.
-    Proxies to Security API /auth/v1/validate
+    
+    Proxies to Security API POST /auth/v1/validate
+    
+    Validates an access token and returns user information if valid.
+    Used by backend services to verify authenticated requests.
+    
+    Request Body:
+        email (str): User's email address
+        password (str): User's password to validate
+    
+    Returns:
+        Response: User information including id, email, role, and hashed_password
+    
+    Raises:
+        HTTP 401: Invalid credentials
+        HTTP 500: Authentication service error
+    
+    Example:
+        >>> curl -X POST http://localhost:8080/api/v1/auth/validate \\
+        >>>   -H "Content-Type: application/json" \\
+        >>>   -d '{"email": "user@example.com", "password": "secret"}'
     """
     try:
         logger.info("Token validation request received")

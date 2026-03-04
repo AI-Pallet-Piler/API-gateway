@@ -67,7 +67,27 @@ async def proxy_request(
     description="Retrieve the full warehouse map including corridors, shelves, connections and connection points.",
 )
 async def get_warehouse_map(request: Request) -> Response:
-    """Get the current warehouse map with all geometric components."""
+    """
+    Get the current warehouse map with all geometric components.
+    
+    Proxies to Backend GET /navigation/map
+    
+    Returns the complete warehouse layout including:
+    - Corridors and passages
+    - Shelf locations and configurations
+    - Connection points between areas
+    - Geometric relationships between components
+    
+    Returns:
+        Response: JSON response containing the warehouse map structure
+    
+    Raises:
+        HTTP 503: Backend service unavailable
+        HTTP 500: Internal server error
+    
+    Example:
+        >>> curl http://localhost:8080/api/v1/navigation/map
+    """"
     try:
         response = await proxy_request(request, "get", "/navigation/map")
         return Response(
@@ -90,7 +110,26 @@ async def get_warehouse_map(request: Request) -> Response:
     description="Retrieve all warehouse locations with shelf associations and coordinates.",
 )
 async def get_locations(request: Request) -> Response:
-    """Get all warehouse locations."""
+    """
+    Get all warehouse locations.
+    
+    Proxies to Backend GET /navigation/locations
+    
+    Returns all warehouse locations with their associated metadata:
+    - Location coordinates (x, y positions)
+    - Shelf associations
+    - Location types and capacities
+    
+    Returns:
+        Response: JSON response containing list of all locations
+    
+    Raises:
+        HTTP 503: Backend service unavailable
+        HTTP 500: Internal server error
+    
+    Example:
+        >>> curl http://localhost:8080/api/v1/navigation/locations
+    """"
     try:
         response = await proxy_request(request, "get", "/navigation/locations")
         return Response(

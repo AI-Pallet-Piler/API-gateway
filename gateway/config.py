@@ -21,7 +21,9 @@ class Settings(BaseSettings):
 
     Attributes:
         url_backend: The base URL of the backend service to proxy requests to.
-            Defaults to empty string.
+            Defaults to "http://httpbin.org/anything".
+        security_api_url: The base URL of the security/auth service.
+            Defaults to "http://security-api:8000".
         check_upstream_services: Whether to check upstream service health
             during readiness probes. Defaults to False.
 
@@ -29,6 +31,8 @@ class Settings(BaseSettings):
         >>> settings = Settings()
         >>> print(settings.url_backend)
         "http://backend-service:8000"
+        >>> print(settings.security_api_url)
+        "http://security-api:8000"
     """
 
     url_backend: str = "http://httpbin.org/anything"
