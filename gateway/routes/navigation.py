@@ -87,7 +87,7 @@ async def get_warehouse_map(request: Request) -> Response:
     
     Example:
         >>> curl http://localhost:8080/api/v1/navigation/map
-    """"
+    """
     try:
         response = await proxy_request(request, "get", "/navigation/map")
         return Response(
@@ -129,7 +129,7 @@ async def get_locations(request: Request) -> Response:
     
     Example:
         >>> curl http://localhost:8080/api/v1/navigation/locations
-    """"
+    """
     try:
         response = await proxy_request(request, "get", "/navigation/locations")
         return Response(

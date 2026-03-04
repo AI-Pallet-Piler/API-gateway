@@ -13,8 +13,6 @@ from datetime import datetime
 from logging.config import dictConfig
 from typing import Optional, Dict, Any
 
-from gateway.middlewares.request_id import get_request_id
-
 
 class JsonFormatter(logging.Formatter):
     """
@@ -37,6 +35,14 @@ class JsonFormatter(logging.Formatter):
         # Outputs: {"timestamp": "...", "level": "INFO", ...}
     """
 
+    def _get_request_id(self) -> str:
+        """Lazily import and call get_request_id to avoid circular imports."""
+        try:
+            from gateway.middlewares.request_id import get_request_id
+            return get_request_id() or "N/A"
+        except Exception:
+            return "N/A"
+
     def format(self, record: logging.LogRecord) -> str:
         """
         Format the log record as a JSON string.
@@ -54,7 +60,7 @@ class JsonFormatter(logging.Formatter):
             "module": record.module,
             "line": record.lineno,
             "message": record.getMessage(),
-            "request_id": get_request_id() or "N/A",  # Add request ID
+            "request_id": self._get_request_id(),  # Add request ID
         }
 
         # Include exception information if present
